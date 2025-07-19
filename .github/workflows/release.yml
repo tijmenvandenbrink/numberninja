@@ -195,10 +195,27 @@ jobs:
         sed -i "s/version: .*/version: $VERSION/" charts/numberninja/Chart.yaml
         sed -i "s/appVersion: .*/appVersion: \"$VERSION\"/" charts/numberninja/Chart.yaml
         
-        # Always update image repositories and tags to use specific version
+        # Find the latest available image tags
+        # If images were built in this run, use current version, otherwise find latest
+        if [ "${{ needs.detect-changes.outputs.backend-changed }}" = "true" ] || [ "${{ needs.detect-changes.outputs.frontend-changed }}" = "true" ]; then
+          BACKEND_TAG="$VERSION"
+          FRONTEND_TAG="$VERSION"
+        else
+          # Find latest image tags from GitHub Container Registry
+          BACKEND_TAG=$(gh api --paginate repos/${{ github.repository }}/packages/container/backend/versions | jq -r '.[0].metadata.container.tags[0]' || echo "$VERSION")
+          FRONTEND_TAG=$(gh api --paginate repos/${{ github.repository }}/packages/container/frontend/versions | jq -r '.[0].metadata.container.tags[0]' || echo "$VERSION")
+        fi
+        
+        echo "Using backend tag: $BACKEND_TAG"
+        echo "Using frontend tag: $FRONTEND_TAG"
+        
+        # Update image repositories and tags
         sed -i "s|repository: .*backend.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}|" charts/numberninja/values.yaml
         sed -i "s|repository: .*frontend.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}|" charts/numberninja/values.yaml
-        sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" charts/numberninja/values.yaml
+        sed -i "s/tag: \".*\"/tag: \"$BACKEND_TAG\"/" charts/numberninja/values.yaml
+        sed -i "/frontend:/,/tag:/ s/tag: \".*\"/tag: \"$FRONTEND_TAG\"/" charts/numberninja/values.yaml
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Package Helm chart
       run: |
