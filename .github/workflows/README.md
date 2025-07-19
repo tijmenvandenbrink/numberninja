@@ -21,9 +21,20 @@ This directory contains GitHub Actions workflows for automated CI/CD of the Numb
 **Triggers:**
 - GitHub release published
 
+**Smart Conditional Builds:**
+The workflow detects changes between releases and only builds what's necessary:
+
 **Jobs:**
-- **build-and-push-images**: Builds and publishes multi-arch Docker images
-- **publish-helm-chart**: Packages and publishes the Helm chart
+- **detect-changes**: Compares files changed since last release
+- **build-backend**: Only runs if `backend/` files changed
+- **build-frontend**: Only runs if `frontend/` files changed
+- **publish-helm-chart**: Only runs if `charts/` files changed
+- **publish-chart-fallback**: Publishes chart if only docs/other files changed
+
+**Benefits:**
+- ⚡ Faster releases (no unnecessary image builds)
+- 💰 Lower costs (fewer compute minutes)
+- 🎯 Precise artifacts (only updated components)
 
 ## Published Artifacts
 
