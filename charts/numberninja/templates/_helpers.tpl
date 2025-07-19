@@ -61,11 +61,3 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{/*
-Create a safe service name for use in ingress
-*/}}
-{{- define "numberninja.serviceName" -}}
-{{- $fullName := include "numberninja.fullname" . -}}
-{{- $serviceName := printf "%s-%s" $fullName .service -}}
-{{- $serviceName | trunc 63 | trimSuffix "-" -}}
-{{- end }}
