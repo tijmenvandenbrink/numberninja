@@ -3,13 +3,13 @@ replicaCount: 1
 
 image:
   backend:
-    repository: numberninja/backend
+    repository: ghcr.io/tijmenvandenbrink/numberninja/backend
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "1.1.0"
   frontend:
-    repository: numberninja/frontend
+    repository: ghcr.io/tijmenvandenbrink/numberninja/frontend
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "1.1.0"
 
 imagePullSecrets: []
 nameOverride: ""

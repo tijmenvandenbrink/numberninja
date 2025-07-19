@@ -162,7 +162,7 @@ jobs:
   publish-helm-chart:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-backend, build-frontend]
-    if: always() && needs.detect-changes.outputs.chart-changed == 'true'
+    if: always()
     permissions:
       contents: write
       packages: write
@@ -195,12 +195,10 @@ jobs:
         sed -i "s/version: .*/version: $VERSION/" charts/numberninja/Chart.yaml
         sed -i "s/appVersion: .*/appVersion: \"$VERSION\"/" charts/numberninja/Chart.yaml
         
-        # Only update image repositories if images were built
-        if [ "${{ needs.detect-changes.outputs.backend-changed }}" = "true" ] || [ "${{ needs.detect-changes.outputs.frontend-changed }}" = "true" ]; then
-          sed -i "s|repository: numberninja/backend|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}|" charts/numberninja/values.yaml
-          sed -i "s|repository: numberninja/frontend|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}|" charts/numberninja/values.yaml
-          sed -i "s/tag: \"latest\"/tag: \"$VERSION\"/" charts/numberninja/values.yaml
-        fi
+        # Always update image repositories and tags to use specific version
+        sed -i "s|repository: .*backend.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}|" charts/numberninja/values.yaml
+        sed -i "s|repository: .*frontend.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}|" charts/numberninja/values.yaml
+        sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" charts/numberninja/values.yaml
 
     - name: Package Helm chart
       run: |
@@ -224,57 +222,3 @@ jobs:
         VERSION=${VERSION#v}
         helm push .cr-release-packages/numberninja-$VERSION.tgz oci://${{ env.REGISTRY }}/${{ github.repository }}/charts
 
-  # Always publish the Helm chart if neither backend nor frontend changed
-  # This handles cases where only documentation or other files changed
-  publish-chart-fallback:
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.chart-changed == 'false' && needs.detect-changes.outputs.backend-changed == 'false' && needs.detect-changes.outputs.frontend-changed == 'false'
-    permissions:
-      contents: write
-      packages: write
-      pages: write
-      id-token: write
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Configure Git
-      run: |
-        git config user.name "$GITHUB_ACTOR"
-        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-    - name: Install Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: '3.12.1'
-
-    - name: Update Chart.yaml with release version
-      run: |
-        VERSION=${GITHUB_REF#refs/tags/}
-        VERSION=${VERSION#v}
-        sed -i "s/version: .*/version: $VERSION/" charts/numberninja/Chart.yaml
-        sed -i "s/appVersion: .*/appVersion: \"$VERSION\"/" charts/numberninja/Chart.yaml
-
-    - name: Package Helm chart
-      run: |
-        mkdir -p .cr-release-packages
-        helm package charts/numberninja --destination .cr-release-packages
-
-    - name: Upload chart to release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: .cr-release-packages/*.tgz
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Log in to Container Registry for Helm
-      run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ${{ env.REGISTRY }} --username ${{ github.actor }} --password-stdin
-
-    - name: Push Helm chart to OCI registry
-      run: |
-        VERSION=${GITHUB_REF#refs/tags/}
-        VERSION=${VERSION#v}
-        helm push .cr-release-packages/numberninja-$VERSION.tgz oci://${{ env.REGISTRY }}/${{ github.repository }}/charts
