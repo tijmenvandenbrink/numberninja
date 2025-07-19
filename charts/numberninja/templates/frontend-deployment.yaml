@@ -56,7 +56,7 @@ spec:
             {{- toYaml .Values.resources.frontend | nindent 12 }}
           env:
             - name: VITE_API_URL
-              value: {{ .Values.frontend.env.VITE_API_URL }}
+              value: {{ if .Values.frontend.env.VITE_API_URL }}{{ .Values.frontend.env.VITE_API_URL | quote }}{{ else }}"http://{{ include "numberninja.fullname" . }}-backend:{{ .Values.service.backend.port }}"{{ end }}
             - name: PORT
               value: "{{ .Values.frontend.port }}"
       {{- with .Values.nodeSelector }}

@@ -125,6 +125,8 @@ ingress:
       hosts:
         - numberninja.example.com
 
+# The frontend will automatically use the internal Kubernetes service
+# for backend communication. You can override if needed:
 frontend:
   env:
     VITE_API_URL: "https://numberninja.example.com/api"

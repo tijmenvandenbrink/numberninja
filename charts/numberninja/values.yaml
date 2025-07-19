@@ -34,13 +34,13 @@ service:
     port: 3000
 
 ingress:
-  enabled: true
+  enabled: false
   className: ""
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
-    - host: numberninja.local
+    - host: numberninja.example.com
       paths:
         - path: /api
           pathType: Prefix
@@ -90,7 +90,9 @@ backend:
 frontend:
   port: 3000
   env:
-    VITE_API_URL: "http://numberninja.local/api"
+    # Use internal Kubernetes service name for backend communication
+    # This will be dynamically set to: http://{release-name}-backend:{port}
+    VITE_API_URL: ""
 
 # Environment configuration
 environment: production
