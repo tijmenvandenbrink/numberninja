@@ -1,0 +1,59 @@
+🥷 Welcome to Number Ninja! 🧮
+
+Your deployment is ready! Here's how to access your application:
+
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  * http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+
+The application should be accessible at:
+- Frontend: http{{ if .Values.ingress.tls }}s{{ end }}://{{ (index .Values.ingress.hosts 0).host }}/
+- Backend API: http{{ if .Values.ingress.tls }}s{{ end }}://{{ (index .Values.ingress.hosts 0).host }}/api/
+
+{{- else if contains "NodePort" .Values.service.type }}
+Get the application URLs by running these commands:
+  export NODE_PORT_FRONTEND=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "numberninja.fullname" . }}-frontend)
+  export NODE_PORT_BACKEND=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "numberninja.fullname" . }}-backend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Frontend: http://$NODE_IP:$NODE_PORT_FRONTEND"
+  echo "Backend API: http://$NODE_IP:$NODE_PORT_BACKEND"
+
+{{- else if contains "LoadBalancer" .Values.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IPs to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "numberninja.fullname" . }}-frontend'
+  export SERVICE_IP_FRONTEND=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "numberninja.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  export SERVICE_IP_BACKEND=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "numberninja.fullname" . }}-backend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Frontend: http://$SERVICE_IP_FRONTEND:{{ .Values.service.frontend.port }}"
+  echo "Backend API: http://$SERVICE_IP_BACKEND:{{ .Values.service.backend.port }}"
+
+{{- else if contains "ClusterIP" .Values.service.type }}
+To access your application, you can use port-forwarding:
+  
+Frontend (Game Interface):
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "numberninja.fullname" . }}-frontend {{ .Values.service.frontend.port }}:{{ .Values.service.frontend.port }}
+  Then visit: http://localhost:{{ .Values.service.frontend.port }}
+
+Backend API:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "numberninja.fullname" . }}-backend {{ .Values.service.backend.port }}:{{ .Values.service.backend.port }}
+  Then visit: http://localhost:{{ .Values.service.backend.port }}/docs (for API documentation)
+
+{{- end }}
+
+🎮 Game Features:
+- Choose your ninja belt level (Easy, Medium, Hard)
+- 2-minute timed math challenges  
+- XP progression system
+- Real-time feedback and scoring
+
+📊 Monitoring:
+To check the status of your pods:
+  kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "numberninja.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+To view logs:
+  kubectl logs --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "numberninja.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -c backend
+  kubectl logs --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "numberninja.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -c frontend
+
+Happy math training, young ninja! 🥷⚡

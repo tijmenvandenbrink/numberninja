@@ -1,0 +1,17 @@
+apiVersion: v2
+name: numberninja
+description: A gamified math practice web application for kids
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - education
+  - math
+  - gaming
+  - kids
+home: https://github.com/numberninja/numberninja
+sources:
+  - https://github.com/numberninja/numberninja
+maintainers:
+  - name: Number Ninja Team
+    email: team@numberninja.io
