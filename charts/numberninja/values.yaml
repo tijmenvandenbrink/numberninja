@@ -90,6 +90,9 @@ frontend:
     # Use internal Kubernetes service name for backend communication
     # This will be dynamically set to: http://{release-name}-backend:{port}
     VITE_API_URL: ""
+    # Allowed hosts for Vite dev server (comma-separated list)
+    # Will be set from ingress hosts automatically
+    VITE_ALLOWED_HOSTS: ""
 
 # Environment configuration
 environment: production
