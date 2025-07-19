@@ -47,11 +47,11 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ $fullName }}-{{ .service }}
+                name: {{ include "numberninja.serviceName" (dict "service" .service "Values" $.Values "Release" $.Release "Chart" $.Chart) }}
                 port:
                   number: {{ if eq .service "backend" }}{{ $.Values.service.backend.port }}{{ else }}{{ $.Values.service.frontend.port }}{{ end }}
               {{- else }}
-              serviceName: {{ $fullName }}-{{ .service }}
+              serviceName: {{ include "numberninja.serviceName" (dict "service" .service "Values" $.Values "Release" $.Release "Chart" $.Chart) }}
               servicePort: {{ if eq .service "backend" }}{{ $.Values.service.backend.port }}{{ else }}{{ $.Values.service.frontend.port }}{{ end }}
               {{- end }}
           {{- end }}
