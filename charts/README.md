@@ -114,9 +114,6 @@ ingress:
   hosts:
     - host: numberninja.example.com
       paths:
-        - path: /api
-          pathType: Prefix
-          service: backend
         - path: /
           pathType: Prefix
           service: frontend
@@ -125,11 +122,12 @@ ingress:
       hosts:
         - numberninja.example.com
 
-# The frontend will automatically use the internal Kubernetes service
-# for backend communication. You can override if needed:
+# The frontend automatically communicates with backend via internal Kubernetes service.
+# External traffic only goes to frontend - backend is not exposed via ingress.
 frontend:
   env:
-    VITE_API_URL: "https://numberninja.example.com/api"
+    # This will default to internal service: http://{release-name}-backend:8000
+    VITE_API_URL: ""
 ```
 
 ```bash

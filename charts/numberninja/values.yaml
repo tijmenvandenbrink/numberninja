@@ -42,9 +42,6 @@ ingress:
   hosts:
     - host: numberninja.example.com
       paths:
-        - path: /api
-          pathType: Prefix
-          service: backend
         - path: /
           pathType: Prefix
           service: frontend
