@@ -46,13 +46,13 @@ jobs:
         with:
           filters: |
             backend:
-              - 'backend/**'
+              - backend/**
               - '!backend/VERSION'
             frontend:
-              - 'frontend/**'
+              - frontend/**
               - '!frontend/VERSION'
             charts:
-              - 'charts/**'
+              - charts/**
               - '!charts/numberninja/VERSION'
 
   bump-backend:
@@ -87,8 +87,8 @@ jobs:
           git push
 
   bump-frontend:
-    needs: [detect-changes, bump-backend]
-    if: always() && (needs.detect-changes.outputs.frontend == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.component == 'frontend'))
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.component == 'frontend')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -119,8 +119,8 @@ jobs:
           git push
 
   bump-chart:
-    needs: [detect-changes, bump-backend, bump-frontend]
-    if: always() && (needs.detect-changes.outputs.charts == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.component == 'chart'))
+    needs: detect-changes
+    if: needs.detect-changes.outputs.charts == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.component == 'chart')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
