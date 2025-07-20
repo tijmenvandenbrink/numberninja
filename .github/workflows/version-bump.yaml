@@ -160,10 +160,10 @@ jobs:
           sed -i "s|repository: .*backend.*|repository: ghcr.io/${{ github.repository }}/backend|" charts/numberninja/values.yaml
           sed -i "s|repository: .*frontend.*|repository: ghcr.io/${{ github.repository }}/frontend|" charts/numberninja/values.yaml
           
-          # Update backend tag
-          sed -i "0,/tag: \".*\"/s//tag: \"$BACKEND_VERSION\"/" charts/numberninja/values.yaml
-          # Update frontend tag (second occurrence)
-          sed -i "0,/tag: \".*\"/s//tag: \"$FRONTEND_VERSION\"/" charts/numberninja/values.yaml
+          # Update backend tag specifically in backend section
+          sed -i "/backend:/,/frontend:/ s/tag: \".*\"/tag: \"$BACKEND_VERSION\"/" charts/numberninja/values.yaml
+          # Update frontend tag specifically in frontend section  
+          sed -i "/frontend:/,$ s/tag: \".*\"/tag: \"$FRONTEND_VERSION\"/" charts/numberninja/values.yaml
 
       - name: Commit version bump
         run: |
