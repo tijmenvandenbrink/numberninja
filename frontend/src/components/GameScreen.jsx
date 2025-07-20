@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Zap, Target, Award } from 'lucide-react';
 import { gameApi } from '../api/gameApi';
 
