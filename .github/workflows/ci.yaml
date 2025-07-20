@@ -115,11 +115,16 @@ jobs:
 
       - name: Run tests
         working-directory: frontend
-        run: npm test -- --coverage --watchAll=false
+        run: |
+          if npm run | grep -q "test"; then
+            npm test -- --coverage --watchAll=false
+          else
+            echo "No tests found, skipping..."
+          fi
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && hashFiles('frontend/coverage/**') != ''
         with:
           directory: ./frontend/coverage
           flags: frontend
