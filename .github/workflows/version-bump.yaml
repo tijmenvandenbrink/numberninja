@@ -1,12 +1,6 @@
 name: Version Bump
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
-      - 'frontend/**' 
-      - 'charts/**'
   workflow_dispatch:
     inputs:
       component:
@@ -48,12 +42,15 @@ jobs:
             backend:
               - backend/**
               - '!backend/VERSION'
+              - '!.github/**'
             frontend:
               - frontend/**
-              - '!frontend/VERSION'
+              - '!frontend/VERSION'  
+              - '!.github/**'
             charts:
               - charts/**
               - '!charts/numberninja/VERSION'
+              - '!.github/**'
 
   bump-backend:
     needs: detect-changes

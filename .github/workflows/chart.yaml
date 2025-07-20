@@ -5,12 +5,12 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
-  pull_request:
-    paths:
-      - 'charts/**'
-  release:
-    types: [published]
+      - 'backend/VERSION'
+      - 'frontend/VERSION'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Images"]
+    types: [completed]
 
 permissions:
   contents: read
