@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import ResultScreen from './components/ResultScreen';
-import './App.css';
 
 function App() {
   const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'results'
