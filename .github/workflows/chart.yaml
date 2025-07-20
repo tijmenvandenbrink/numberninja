@@ -8,6 +8,8 @@ on:
   pull_request:
     paths:
       - 'charts/**'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -53,7 +55,7 @@ jobs:
 
   release:
     needs: lint-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
     permissions:
       contents: write
       packages: write
@@ -77,6 +79,19 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Get chart version
+        id: version
+        run: |
+          VERSION=$(cat charts/numberninja/VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Chart version: $VERSION"
+
+      - name: Update chart version in Chart.yaml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          sed -i "s/version: .*/version: $VERSION/" charts/numberninja/Chart.yaml
+          sed -i "s/appVersion: .*/appVersion: \"$VERSION\"/" charts/numberninja/Chart.yaml
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0

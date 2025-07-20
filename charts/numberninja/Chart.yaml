@@ -2,8 +2,8 @@ apiVersion: v2
 name: numberninja
 description: A gamified math practice web application for kids
 type: application
-version: 0.1.0
-appVersion: "1.0.0"
+version: 1.2.1
+appVersion: "1.2.1"
 keywords:
   - education
   - math
