@@ -1,0 +1,5 @@
+owner: tijmenvandenbrink
+git-repo: numberninja
+chart-repo-url: https://tijmenvandenbrink.github.io/numberninja
+release-name-template: "helm-chart-{{ .Name }}-{{ .Version }}"
+skip-existing: true
