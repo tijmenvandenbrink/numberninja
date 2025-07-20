@@ -5,7 +5,7 @@ image:
   backend:
     repository: ghcr.io/tijmenvandenbrink/numberninja/backend
     pullPolicy: IfNotPresent
-    tag: "1.1.2"
+    tag: "1.1.3"
   frontend:
     repository: ghcr.io/tijmenvandenbrink/numberninja/frontend
     pullPolicy: IfNotPresent
