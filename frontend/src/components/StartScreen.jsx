@@ -34,7 +34,7 @@ const StartScreen = ({ onStartGame }) => {
           Number Ninja
           <span className="ninja-emoji">🧮</span>
         </h1>
-        <p className="subtitle">Master math with ninja speed!</p>
+        <p className="subtitle">Master math with ninja speed! 🥷</p>
       </motion.div>
 
       <motion.div
