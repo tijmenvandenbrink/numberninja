@@ -61,7 +61,7 @@ spec:
             {{- toYaml .Values.resources.frontend | nindent 12 }}
           env:
             - name: VITE_API_URL
-              value: {{ if .Values.frontend.env.VITE_API_URL }}{{ .Values.frontend.env.VITE_API_URL | quote }}{{ else }}"http://{{ include "numberninja.fullname" . }}-backend:{{ .Values.service.backend.port }}"{{ end }}
+              value: {{ if .Values.frontend.env.VITE_API_URL }}{{ .Values.frontend.env.VITE_API_URL | quote }}{{ else }}{{- if .Values.ingress.enabled }}{{- $firstHost := (index .Values.ingress.hosts 0).host -}}"https://{{ $firstHost }}/api"{{ else }}"http://localhost:8000/api"{{ end }}{{ end }}
             - name: VITE_ALLOWED_HOSTS
               value: {{ if .Values.frontend.env.VITE_ALLOWED_HOSTS }}{{ .Values.frontend.env.VITE_ALLOWED_HOSTS | quote }}{{ else }}{{- $hosts := list -}}{{- range .Values.ingress.hosts -}}{{- $hosts = append $hosts .host -}}{{- end }}{{ join "," $hosts | quote }}{{ end }}
             - name: PORT

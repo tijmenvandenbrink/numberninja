@@ -38,10 +38,12 @@ ingress:
   className: ""
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
     - host: numberninja.example.com
       paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
         - path: /
           pathType: Prefix
           service: frontend
@@ -87,8 +89,9 @@ backend:
 frontend:
   port: 3000
   env:
-    # Use internal Kubernetes service name for backend communication
-    # This will be dynamically set to: http://{release-name}-backend:{port}
+    # API URL for frontend to reach backend
+    # If empty, uses https://{ingress-host}/api when ingress enabled
+    # Falls back to http://localhost:8000/api for development
     VITE_API_URL: ""
     # Allowed hosts for Vite dev server (comma-separated list)
     # Will be set from ingress hosts automatically
