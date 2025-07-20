@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { Play, Settings, Trophy } from 'lucide-react';
 
 const StartScreen = ({ onStartGame }) => {
