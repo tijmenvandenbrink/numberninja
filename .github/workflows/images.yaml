@@ -123,6 +123,28 @@ jobs:
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
             REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
 
+      - name: Create Backend Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: backend-${{ steps.version.outputs.version }}
+          name: Backend v${{ steps.version.outputs.version }}
+          body: |
+            ## Backend Release v${{ steps.version.outputs.version }}
+            
+            **Container Image**: `ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}`
+            
+            ### Features
+            - FastAPI-based math game backend
+            - Multi-architecture support (linux/amd64, linux/arm64)
+            - Session management and scoring system
+            
+            ### Usage
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+            ```
+          draft: false
+          prerelease: false
+
   build-frontend:
     needs: bump-and-build
     if: github.event.inputs.component == 'frontend' || github.event.inputs.component == 'both'
@@ -178,6 +200,28 @@ jobs:
             BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
             REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+
+      - name: Create Frontend Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: frontend-${{ steps.version.outputs.version }}
+          name: Frontend v${{ steps.version.outputs.version }}
+          body: |
+            ## Frontend Release v${{ steps.version.outputs.version }}
+            
+            **Container Image**: `ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.version }}`
+            
+            ### Features
+            - React-based gamified math training app
+            - Multi-architecture support (linux/amd64, linux/arm64)
+            - Ninja-themed UI with progress tracking
+            
+            ### Usage
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.version }}
+            ```
+          draft: false
+          prerelease: false
 
   summary:
     needs: [build-backend, build-frontend]

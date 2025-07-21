@@ -96,6 +96,13 @@ jobs:
       - name: Package and publish chart
         run: |
           CHART_VERSION=$(cat charts/numberninja/VERSION)
+          BACKEND_VERSION=$(cat backend/VERSION)
+          FRONTEND_VERSION=$(cat frontend/VERSION)
+          
+          # Set environment variables for next step
+          echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_ENV
+          echo "BACKEND_VERSION=$BACKEND_VERSION" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=$FRONTEND_VERSION" >> $GITHUB_ENV
           
           # Package chart
           helm package charts/numberninja --destination .helm-packages
@@ -104,6 +111,32 @@ jobs:
           helm push .helm-packages/numberninja-$CHART_VERSION.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
           
           echo "✅ Published chart v$CHART_VERSION to oci://ghcr.io/${{ github.repository_owner }}/charts/numberninja:$CHART_VERSION"
+
+      - name: Create Chart Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: helm-chart-numberninja-${{ env.CHART_VERSION }}
+          name: Helm Chart v${{ env.CHART_VERSION }}
+          body: |
+            ## Helm Chart Release v${{ env.CHART_VERSION }}
+            
+            **OCI Registry**: `oci://ghcr.io/${{ github.repository_owner }}/charts/numberninja:${{ env.CHART_VERSION }}`
+            
+            ### Image Versions
+            - Backend: ${{ env.BACKEND_VERSION }}
+            - Frontend: ${{ env.FRONTEND_VERSION }}
+            
+            ### Installation
+            ```bash
+            helm install numberninja oci://ghcr.io/${{ github.repository_owner }}/charts/numberninja --version ${{ env.CHART_VERSION }}
+            ```
+            
+            ### Features
+            - Complete Kubernetes deployment for NumberNinja
+            - Ingress configuration for external access
+            - Configurable resource limits and scaling
+          draft: false
+          prerelease: false
 
   lint-test:
     runs-on: ubuntu-latest
