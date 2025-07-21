@@ -74,6 +74,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest changes
+        run: git pull origin main
 
       - name: Get backend version
         id: version
@@ -152,6 +157,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest changes
+        run: git pull origin main
 
       - name: Get frontend version
         id: version
