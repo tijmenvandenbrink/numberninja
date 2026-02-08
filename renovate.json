@@ -1,0 +1,110 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enableVulnerabilityAlertsWithLabel('security')"
+  ],
+  "timezone": "Europe/Amsterdam",
+  "schedule": [
+    "before 10am every weekday"
+  ],
+  "labels": ["dependencies"],
+  "assignees": ["@tijmenvandenbrink"],
+  "prConcurrentLimit": 10,
+  "prCreation": "immediate",
+  "rebaseWhen": "behind-base-branch",
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "⬆️",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "priority"],
+    "assignees": ["@tijmenvandenbrink"],
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "description": "Group all npm dependencies together",
+      "matchDatasources": ["npm"],
+      "groupName": "npm dependencies",
+      "schedule": ["before 10am every weekday"]
+    },
+    {
+      "description": "Group all Python dependencies together",
+      "matchDatasources": ["pypi"],
+      "groupName": "Python dependencies",
+      "schedule": ["before 10am every weekday"]
+    },
+    {
+      "description": "Auto-merge patch updates for non-major versions",
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Auto-merge minor updates for non-breaking versions",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Immediately create PRs for security vulnerabilities",
+      "matchDatasources": ["npm", "pypi"],
+      "vulnerabilitySeverity": ["HIGH", "CRITICAL"],
+      "schedule": ["at any time"],
+      "prPriority": 100,
+      "labels": ["security", "priority"],
+      "automerge": false
+    },
+    {
+      "description": "Separate major updates into individual PRs",
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "automerge": false,
+      "labels": ["major-update"]
+    },
+    {
+      "description": "Group React ecosystem updates",
+      "matchPackagePatterns": ["^react", "^@types/react"],
+      "groupName": "React ecosystem",
+      "automerge": false
+    },
+    {
+      "description": "Group ESLint ecosystem updates",
+      "matchPackagePatterns": ["^eslint", "^@eslint"],
+      "groupName": "ESLint ecosystem"
+    },
+    {
+      "description": "Group FastAPI ecosystem updates",
+      "matchPackagePatterns": ["^fastapi", "^uvicorn", "^pydantic"],
+      "groupName": "FastAPI ecosystem"
+    },
+    {
+      "description": "Update GitHub Actions monthly",
+      "matchManagers": ["github-actions"],
+      "schedule": ["before 10am on the first day of the month"],
+      "groupName": "GitHub Actions",
+      "automerge": true
+    }
+  ],
+  "pip_requirements": {
+    "fileMatch": ["^backend/requirements\\.txt$"]
+  },
+  "npm": {
+    "fileMatch": ["^frontend/package\\.json$"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 10am on monday"],
+    "automerge": true
+  },
+  "separateMinorPatch": true,
+  "ignorePresets": [":prHourlyLimit2"],
+  "prHourlyLimit": 0,
+  "branchConcurrentLimit": 0
+}
