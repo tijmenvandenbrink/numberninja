@@ -66,6 +66,16 @@ spec:
               value: {{ if .Values.frontend.env.VITE_ALLOWED_HOSTS }}{{ .Values.frontend.env.VITE_ALLOWED_HOSTS | quote }}{{ else }}{{- $hosts := list -}}{{- range .Values.ingress.hosts -}}{{- $hosts = append $hosts .host -}}{{- end }}{{ join "," $hosts | quote }}{{ end }}
             - name: PORT
               value: "{{ .Values.frontend.port }}"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: vite-cache
+              mountPath: /app/node_modules/.vite
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: vite-cache
+          emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
