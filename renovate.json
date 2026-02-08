@@ -53,15 +53,6 @@
       "automergeStrategy": "squash"
     },
     {
-      "description": "Immediately create PRs for security vulnerabilities",
-      "matchDatasources": ["npm", "pypi"],
-      "vulnerabilitySeverity": ["HIGH", "CRITICAL"],
-      "schedule": ["at any time"],
-      "prPriority": 100,
-      "labels": ["security", "priority"],
-      "automerge": false
-    },
-    {
       "description": "Separate major updates into individual PRs",
       "matchUpdateTypes": ["major"],
       "groupName": null,
