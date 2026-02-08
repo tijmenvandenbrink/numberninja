@@ -11,8 +11,12 @@
     "before 10am on monday",
     "before 10am on thursday"
   ],
-  "labels": ["dependencies"],
-  "assignees": ["@tijmenvandenbrink"],
+  "labels": [
+    "dependencies"
+  ],
+  "assignees": [
+    "@tijmenvandenbrink"
+  ],
   "prConcurrentLimit": 10,
   "prCreation": "immediate",
   "rebaseWhen": "behind-base-branch",
@@ -20,24 +24,37 @@
   "commitMessagePrefix": "⬆️",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security", "priority"],
-    "assignees": ["@tijmenvandenbrink"],
-    "schedule": ["at any time"]
+    "labels": [
+      "security",
+      "priority"
+    ],
+    "assignees": [
+      "@tijmenvandenbrink"
+    ],
+    "schedule": [
+      "at any time"
+    ]
   },
   "packageRules": [
     {
       "description": "Group all npm dependencies together",
-      "matchDatasources": ["npm"],
+      "matchDatasources": [
+        "npm"
+      ],
       "groupName": "npm dependencies"
     },
     {
       "description": "Group all Python dependencies together",
-      "matchDatasources": ["pypi"],
+      "matchDatasources": [
+        "pypi"
+      ],
       "groupName": "Python dependencies"
     },
     {
       "description": "Auto-merge patch updates for non-major versions",
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": [
+        "patch"
+      ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
@@ -45,7 +62,9 @@
     },
     {
       "description": "Auto-merge minor updates for non-breaking versions",
-      "matchUpdateTypes": ["minor"],
+      "matchUpdateTypes": [
+        "minor"
+      ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
@@ -53,48 +72,74 @@
     },
     {
       "description": "Separate major updates into individual PRs",
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "groupName": null,
       "automerge": false,
-      "labels": ["major-update"]
+      "labels": [
+        "major-update"
+      ]
     },
     {
       "description": "Group React ecosystem updates",
-      "matchPackagePatterns": ["^react", "^@types/react"],
       "groupName": "React ecosystem",
-      "automerge": false
+      "automerge": false,
+      "matchPackageNames": [
+        "/^react/",
+        "/^@types/react/"
+      ]
     },
     {
       "description": "Group ESLint ecosystem updates",
-      "matchPackagePatterns": ["^eslint", "^@eslint"],
-      "groupName": "ESLint ecosystem"
+      "groupName": "ESLint ecosystem",
+      "matchPackageNames": [
+        "/^eslint/",
+        "/^@eslint/"
+      ]
     },
     {
       "description": "Group FastAPI ecosystem updates",
-      "matchPackagePatterns": ["^fastapi", "^uvicorn", "^pydantic"],
-      "groupName": "FastAPI ecosystem"
+      "groupName": "FastAPI ecosystem",
+      "matchPackageNames": [
+        "/^fastapi/",
+        "/^uvicorn/",
+        "/^pydantic/"
+      ]
     },
     {
       "description": "Update GitHub Actions monthly",
-      "matchManagers": ["github-actions"],
-      "schedule": ["on the first day of the month"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "schedule": [
+        "on the first day of the month"
+      ],
       "groupName": "GitHub Actions",
       "automerge": true
     }
   ],
   "pip_requirements": {
-    "fileMatch": ["^backend/requirements\\.txt$"]
+    "managerFilePatterns": [
+      "/^backend/requirements\\.txt$/"
+    ]
   },
   "npm": {
-    "fileMatch": ["^frontend/package\\.json$"]
+    "managerFilePatterns": [
+      "/^frontend/package\\.json$/"
+    ]
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["on monday"],
+    "schedule": [
+      "on monday"
+    ],
     "automerge": true
   },
   "separateMinorPatch": true,
-  "ignorePresets": [":prHourlyLimit2"],
+  "ignorePresets": [
+    ":prHourlyLimit2"
+  ],
   "prHourlyLimit": 0,
   "branchConcurrentLimit": 0
 }
