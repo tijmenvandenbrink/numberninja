@@ -4,81 +4,67 @@ This project uses **decoupled semantic versioning** where each component evolves
 
 ## Components
 
-### 🔧 Backend (`backend/VERSION`)
-- **Current**: `1.1.0`
-- **Triggers**: Changes to `backend/**` 
-- **Images**: `ghcr.io/tijmenvandenbrink/numberninja/backend:1.1.0`
+### Backend (`backend/VERSION`)
+- **Images**: `ghcr.io/tijmenvandenbrink/numberninja/backend:<version>`
 
-### 🎨 Frontend (`frontend/VERSION`)
-- **Current**: `1.1.0` 
-- **Triggers**: Changes to `frontend/**`
-- **Images**: `ghcr.io/tijmenvandenbrink/numberninja/frontend:1.1.0`
+### Frontend (`frontend/VERSION`)
+- **Images**: `ghcr.io/tijmenvandenbrink/numberninja/frontend:<version>`
 
-### 📦 Helm Chart (`charts/numberninja/VERSION`)
-- **Current**: `1.2.1`
-- **Triggers**: Changes to `charts/**`
+### Helm Chart (`charts/numberninja/VERSION`)
 - **References**: Latest stable backend + frontend versions
 
-## Automatic Version Bumping
+## Releasing
 
-### 🤖 Automated (on push to main)
-```yaml
-# Automatic patch bumps when files change:
-backend/**     → backend patch bump
-frontend/**    → frontend patch bump  
-charts/**      → chart patch bump
+All releases are done through a single workflow: **`release.yaml`** (manual dispatch only).
+
+### Via GitHub Actions UI
+1. Go to **Actions > Release**
+2. Select the component (`backend`, `frontend`, or `both`)
+3. Select the bump type (`patch`, `minor`, or `major`)
+4. Optionally enable/disable chart release
+5. Click **Run workflow**
+
+### Via CLI
+```bash
+# Release backend with a patch bump + chart release
+gh workflow run release.yaml -f component=backend -f bump_type=patch -f release_chart=true
+
+# Release both components with a minor bump, no chart
+gh workflow run release.yaml -f component=both -f bump_type=minor -f release_chart=false
 ```
 
-### 🎯 Manual (workflow dispatch)
-```bash
-# Trigger manual version bumps:
-gh workflow run version-bump.yaml -f component=backend -f bump_type=minor
-gh workflow run version-bump.yaml -f component=frontend -f bump_type=major  
-gh workflow run version-bump.yaml -f component=chart -f bump_type=patch
-```
+### What the release workflow does
+1. **Bumps version(s)** for the selected component(s) via `scripts/bump-version.sh`
+2. **Updates chart** image tags and bumps chart version (if `release_chart` is enabled)
+3. **Commits all changes atomically** in a single commit and push
+4. **Builds and pushes** Docker images to GHCR with the new version tag
+5. **Packages and publishes** the Helm chart to the OCI registry (if enabled)
+6. **Creates GitHub releases** for the component(s) and chart
 
-### 🛠️ Local Development
+### Local Development
 ```bash
-# Using the bump-version script:
-./scripts/bump-version.sh backend minor   # 1.1.0 → 1.2.0
-./scripts/bump-version.sh frontend patch  # 1.1.0 → 1.1.1
-./scripts/bump-version.sh chart major     # 1.2.1 → 2.0.0
+# Using the bump-version script directly:
+./scripts/bump-version.sh backend minor   # 1.1.0 -> 1.2.0
+./scripts/bump-version.sh frontend patch  # 1.1.0 -> 1.1.1
+./scripts/bump-version.sh chart major     # 1.2.1 -> 2.0.0
 ```
 
 ## Workflows
 
-### 📋 CI (`ci.yaml`)
-- Runs tests and linting
-- No version changes
-
-### 🐳 Images (`images.yaml`) 
-- Builds images with component-specific versions
-- Tags: `{version}`, `latest`, `main`, `pr-{number}`
-
-### 📦 Chart (`chart.yaml`)
-- Releases Helm charts with chart-specific versions
-- References latest stable image versions
-
-### 🔖 Version Bump (`version-bump.yaml`)
-- Automatically bumps versions when components change
-- Supports manual version bumps
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yaml` | PR / push to main | Lint, test, build validation (no push) |
+| `release.yaml` | Manual dispatch | Version bump + image build+push + chart release |
+| `_build-image.yaml` | Called by ci/release | Reusable Docker build+push |
+| `vulnerability-scans.yaml` | Daily cron / manual | Trivy security scans (fails on HIGH+) |
+| `renovate.yaml` | Mon/Thu cron | Dependency management |
+| `release-drafter.yml` | PR / push to main | Release notes drafting |
 
 ## Example Workflow
 
-1. **Make backend changes** → Push to main
-2. **Backend version**: `1.1.0` → `1.1.1` (auto patch bump)
-3. **Backend image**: Built and tagged as `1.1.1`
-4. **Chart references**: Still points to `1.1.0` (unchanged)
-
-5. **Update chart configuration** → Push to main  
-6. **Chart version**: `1.2.1` → `1.2.2` (auto patch bump)
-7. **Chart image refs**: Updated to use backend `1.1.1`
-8. **Chart release**: Published as `numberninja-1.2.2.tgz`
-
-## Benefits
-
-✅ **Independent Evolution**: Components version based on actual changes
-✅ **Semantic Versioning**: Proper major.minor.patch semantics  
-✅ **Stable References**: Charts reference tested, stable image versions
-✅ **Clear History**: Version changes are explicit and traceable
-✅ **Flexible Releases**: Release charts without rebuilding images
+1. **Make backend changes** and push to main
+2. **CI runs** — tests, lint, build validation (no images pushed)
+3. **Trigger release** via Actions UI: `component=backend, bump_type=patch`
+4. **Backend version** bumped (e.g. `1.1.0` -> `1.1.1`), image built and pushed
+5. **Chart updated** with new backend image tag and chart version bumped
+6. **GitHub releases** created for backend and chart

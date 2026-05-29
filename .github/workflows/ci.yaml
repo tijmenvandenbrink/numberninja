@@ -2,43 +2,36 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
       - 'docs/**'
       - '*.md'
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
       - 'docs/**'
       - '*.md'
   workflow_dispatch:
-    inputs:
-      run_e2e:
-        description: 'Force E2E tests to run'
-        type: boolean
-        default: false
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       charts: ${{ steps.filter.outputs.charts }}
-      go: ${{ steps.filter.outputs.go }}
-      js: ${{ steps.filter.outputs.js }}
       docker: ${{ steps.filter.outputs.docker }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Check for changes
         uses: dorny/paths-filter@v3
         id: filter
@@ -65,6 +58,7 @@ jobs:
 
   test-backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: changes
     if: needs.changes.outputs.python == 'true' || needs.changes.outputs.backend == 'true'
     steps:
@@ -90,7 +84,6 @@ jobs:
           pip install flake8
           flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        continue-on-error: true
 
       - name: Run tests
         working-directory: backend
@@ -111,6 +104,7 @@ jobs:
 
   test-frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: changes
     if: needs.changes.outputs.js == 'true' || needs.changes.outputs.frontend == 'true'
     steps:
@@ -150,6 +144,7 @@ jobs:
 
   lint-charts:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: changes
     if: needs.changes.outputs.charts == 'true'
     steps:
@@ -164,9 +159,9 @@ jobs:
           version: '3.12.1'
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
@@ -174,58 +169,30 @@ jobs:
       - name: Lint charts
         run: ct lint --target-branch ${{ github.event.repository.default_branch }}
 
-  build-images:
-    runs-on: ubuntu-latest
-    needs: [changes, test-backend, test-frontend]
-    if: always() && (needs.changes.outputs.docker == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true')
+  build-backend-image:
+    needs: [changes, test-backend]
+    if: >-
+      !failure() && !cancelled() &&
+      (needs.changes.outputs.docker == 'true' || needs.changes.outputs.backend == 'true')
+    uses: ./.github/workflows/_build-image.yaml
+    with:
+      component: backend
+      context: ./backend
+      push: false
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        include:
-          - component: backend
-            context: ./backend
-            condition: ${{ needs.changes.outputs.backend == 'true' }}
-          - component: frontend  
-            context: ./frontend
-            condition: ${{ needs.changes.outputs.frontend == 'true' }}
-    steps:
-      - name: Checkout repository
-        if: ${{ matrix.condition }}
-        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        if: ${{ matrix.condition }}
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        if: ${{ matrix.condition }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        if: ${{ matrix.condition }}
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.component }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix=sha-,format=short
-
-      - name: Build and push image
-        if: ${{ matrix.condition }}
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ matrix.context }}
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  build-frontend-image:
+    needs: [changes, test-frontend]
+    if: >-
+      !failure() && !cancelled() &&
+      (needs.changes.outputs.docker == 'true' || needs.changes.outputs.frontend == 'true')
+    uses: ./.github/workflows/_build-image.yaml
+    with:
+      component: frontend
+      context: ./frontend
+      push: false
+    permissions:
+      contents: read
+      packages: write
