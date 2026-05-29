@@ -1,24 +1,33 @@
-FROM node:24-alpine
+FROM node:24-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
 
 # Create non-root user
 RUN addgroup -g 10001 appuser && \
     adduser -D -u 10001 -G appuser appuser
 
-WORKDIR /app
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Install dependencies as root
-COPY package*.json ./
-RUN npm install
+# Copy built files
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy application code
-COPY . .
+# Copy entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
 USER appuser
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -96,7 +96,7 @@ backend:
     initialDelaySeconds: 30
     periodSeconds: 10
 
-# Frontend specific configuration  
+# Frontend specific configuration
 frontend:
   port: 3000
   env:
@@ -104,9 +104,6 @@ frontend:
     # If empty, uses https://{ingress-host}/api when ingress enabled
     # Falls back to http://localhost:8000/api for development
     VITE_API_URL: ""
-    # Allowed hosts for Vite dev server (comma-separated list)
-    # Will be set from ingress hosts automatically
-    VITE_ALLOWED_HOSTS: ""
 
 # Environment configuration
 environment: production
