@@ -6,10 +6,6 @@ import { gameApi } from '../api/gameApi';
 const ResultScreen = ({ result, onPlayAgain, onMainMenu }) => {
   const [ninjaBelt, setNinjaBelt] = useState(null);
 
-  useEffect(() => {
-    fetchNinjaBelt();
-  }, [result.xp_earned]);
-
   const fetchNinjaBelt = async () => {
     try {
       const beltInfo = await gameApi.getNinjaBelt(result.xp_earned);
@@ -18,6 +14,10 @@ const ResultScreen = ({ result, onPlayAgain, onMainMenu }) => {
       console.error('Failed to fetch ninja belt:', error);
     }
   };
+
+  useEffect(() => {
+    fetchNinjaBelt();
+  }, [result.xp_earned]);
 
   const getPerformanceMessage = () => {
     if (result.accuracy >= 90) return { emoji: '🌟', message: 'Ninja Master!' };

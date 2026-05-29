@@ -15,8 +15,73 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
   
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState(null);
-  const [problemStartTime, setProblemStartTime] = useState(Date.now());
+  const [problemStartTime, setProblemStartTime] = useState(() => Date.now());
   const inputRef = useRef(null);
+
+  const startGame = async () => {
+    try {
+      const response = await gameApi.startGame(difficulty, operationType);
+      setGameState(prev => ({
+        ...prev,
+        sessionId: response.session_id,
+        currentProblem: response.problem,
+        timeRemaining: response.time_remaining,
+        isLoading: false
+      }));
+      setProblemStartTime(Date.now());
+      setTimeout(() => {
+        if (inputRef.current) inputRef.current.focus();
+      }, 100);
+    } catch (error) {
+      console.error('Failed to start game:', error);
+    }
+  };
+
+  const submitAnswer = async () => {
+    if (!userAnswer.trim()) return;
+
+    const timeTaken = (Date.now() - problemStartTime) / 1000;
+
+    try {
+      const response = await gameApi.submitAnswer(
+        gameState.sessionId,
+        userAnswer,
+        timeTaken
+      );
+
+      setFeedback({
+        isCorrect: response.is_correct,
+        correctAnswer: response.correct_answer
+      });
+
+      setGameState(prev => ({
+        ...prev,
+        currentProblem: response.next_problem,
+        score: response.score,
+        totalProblems: response.total_problems,
+        timeRemaining: response.time_remaining
+      }));
+
+      setUserAnswer('');
+      setProblemStartTime(Date.now());
+
+      setTimeout(() => {
+        setFeedback(null);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to submit answer:', error);
+    }
+  };
+
+  const endGame = async () => {
+    try {
+      const result = await gameApi.endGame(gameState.sessionId);
+      onGameEnd(result);
+    } catch (error) {
+      console.error('Failed to end game:', error);
+    }
+  };
 
   useEffect(() => {
     startGame();
@@ -62,71 +127,6 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
 
     return () => clearInterval(timer);
   }, []);
-
-  const startGame = async () => {
-    try {
-      const response = await gameApi.startGame(difficulty, operationType);
-      setGameState(prev => ({
-        ...prev,
-        sessionId: response.session_id,
-        currentProblem: response.problem,
-        timeRemaining: response.time_remaining,
-        isLoading: false
-      }));
-      setProblemStartTime(Date.now());
-      setTimeout(() => {
-        if (inputRef.current) inputRef.current.focus();
-      }, 100);
-    } catch (error) {
-      console.error('Failed to start game:', error);
-    }
-  };
-
-  const submitAnswer = async () => {
-    if (!userAnswer.trim()) return;
-
-    const timeTaken = (Date.now() - problemStartTime) / 1000;
-    
-    try {
-      const response = await gameApi.submitAnswer(
-        gameState.sessionId,
-        userAnswer,
-        timeTaken
-      );
-
-      setFeedback({
-        isCorrect: response.is_correct,
-        correctAnswer: response.correct_answer
-      });
-
-      setGameState(prev => ({
-        ...prev,
-        currentProblem: response.next_problem,
-        score: response.score,
-        totalProblems: response.total_problems,
-        timeRemaining: response.time_remaining
-      }));
-
-      setUserAnswer('');
-      setProblemStartTime(Date.now());
-      
-      setTimeout(() => {
-        setFeedback(null);
-      }, 1500);
-
-    } catch (error) {
-      console.error('Failed to submit answer:', error);
-    }
-  };
-
-  const endGame = async () => {
-    try {
-      const result = await gameApi.endGame(gameState.sessionId);
-      onGameEnd(result);
-    } catch (error) {
-      console.error('Failed to end game:', error);
-    }
-  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !feedback) {
