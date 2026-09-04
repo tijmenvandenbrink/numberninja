@@ -130,7 +130,7 @@ jobs:
         working-directory: frontend
         run: |
           if npm run | grep -q "test"; then
-            npm test -- --coverage --watchAll=false
+            npm test -- --coverage
           else
             echo "No tests found, skipping..."
           fi

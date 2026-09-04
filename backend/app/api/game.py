@@ -38,7 +38,7 @@ async def start_game(difficulty: DifficultyLevel, operation_type: OperationType)
         "time_remaining": 120
     }
 
-@router.post("/answer", response_model=dict)
+@router.post("/answer")
 async def submit_answer(answer_data: Answer):
     session_id = answer_data.session_id
     

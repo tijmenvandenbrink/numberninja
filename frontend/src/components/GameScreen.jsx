@@ -14,9 +14,16 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
   });
   
   const [userAnswer, setUserAnswer] = useState('');
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer, id }
   const [problemStartTime, setProblemStartTime] = useState(() => Date.now());
   const inputRef = useRef(null);
+  const feedbackTimeoutRef = useRef(null);
+  const feedbackIdRef = useRef(0);
+  const isSubmittingRef = useRef(false);
+
+  useEffect(() => () => {
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+  }, []);
 
   const startGame = async () => {
     try {
@@ -38,7 +45,8 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
   };
 
   const submitAnswer = async () => {
-    if (!userAnswer.trim()) return;
+    if (!userAnswer.trim() || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     const timeTaken = (Date.now() - problemStartTime) / 1000;
 
@@ -49,9 +57,12 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
         timeTaken
       );
 
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      const feedbackId = ++feedbackIdRef.current;
       setFeedback({
         isCorrect: response.is_correct,
-        correctAnswer: response.correct_answer
+        correctAnswer: response.correct_answer,
+        id: feedbackId
       });
 
       setGameState(prev => ({
@@ -65,12 +76,15 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
       setUserAnswer('');
       setProblemStartTime(Date.now());
 
-      setTimeout(() => {
-        setFeedback(null);
-      }, 1500);
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedback(current => (current && current.id === feedbackId ? null : current));
+        feedbackTimeoutRef.current = null;
+      }, 750);
 
     } catch (error) {
       console.error('Failed to submit answer:', error);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
@@ -129,7 +143,7 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
   }, []);
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !feedback) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       submitAnswer();
     }
@@ -138,8 +152,8 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
   // Global keyboard handler for seamless gameplay
   useEffect(() => {
     const handleGlobalKeyPress = (e) => {
-      // Only handle if no feedback is showing and game is active
-      if (!feedback && !gameState.isLoading) {
+      // Only handle if game is active
+      if (!gameState.isLoading) {
         // If it's a number or Enter, ensure input has focus
         if ((e.key >= '0' && e.key <= '9') || e.key === 'Enter' || e.key === 'Backspace' || e.key === '-') {
           if (inputRef.current && document.activeElement !== inputRef.current) {
@@ -151,7 +165,17 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
 
     document.addEventListener('keydown', handleGlobalKeyPress);
     return () => document.removeEventListener('keydown', handleGlobalKeyPress);
-  }, [feedback, gameState.isLoading]);
+  }, [gameState.isLoading]);
+
+  // Imperative flash on input border when feedback arrives
+  useEffect(() => {
+    if (!feedback || !inputRef.current) return;
+    const el = inputRef.current;
+    const cls = feedback.isCorrect ? 'flash-correct' : 'flash-incorrect';
+    el.classList.remove('flash-correct', 'flash-incorrect');
+    void el.offsetWidth; // force reflow so animation restarts even for same outcome twice in a row
+    el.classList.add(cls);
+  }, [feedback]);
 
   if (gameState.isLoading) {
     return (
@@ -201,40 +225,45 @@ const GameScreen = ({ difficulty, operationType, onGameEnd }) => {
             onChange={(e) => setUserAnswer(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type answer and press Enter..."
-            disabled={!!feedback}
             className="answer-field"
             autoFocus
             autoComplete="off"
           />
         </div>
-        <div className="keyboard-hint">
-          Press <kbd>Enter</kbd> to submit your answer
-        </div>
       </motion.div>
 
-      <AnimatePresence>
-        {feedback && (
-          <motion.div
-            className={`feedback ${feedback.isCorrect ? 'correct' : 'incorrect'}`}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {feedback.isCorrect ? (
-              <div className="feedback-content">
-                <span className="emoji">✨</span>
-                <span>Excellent!</span>
-              </div>
-            ) : (
-              <div className="feedback-content">
-                <span className="emoji">💪</span>
-                <span>The answer was {feedback.correctAnswer}</span>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="keyboard-hint-slot">
+        <AnimatePresence mode="wait">
+          {feedback ? (
+            <motion.div
+              key={`feedback-${feedback.id}`}
+              className={`keyboard-hint feedback-text ${feedback.isCorrect ? 'correct' : 'incorrect'}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              data-testid="answer-feedback"
+            >
+              {feedback.isCorrect ? (
+                <span className="feedback-inline"><span className="emoji">✨</span> Excellent!</span>
+              ) : (
+                <span className="feedback-inline"><span className="emoji">💪</span> The answer was {feedback.correctAnswer}</span>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="hint-idle"
+              className="keyboard-hint"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              Press <kbd>Enter</kbd> to submit your answer
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="progress-bar">
         <div 
