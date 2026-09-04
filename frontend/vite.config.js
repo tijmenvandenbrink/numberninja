@@ -9,6 +9,7 @@ export default defineConfig(() => ({
     port: 3000,
     allowedHosts: process.env.VITE_ALLOWED_HOSTS ? process.env.VITE_ALLOWED_HOSTS.split(',') : 'all'
   },
+  // Vitest config (see src/components/GameScreen.test.jsx)
   test: {
     environment: 'jsdom',
     globals: true,
