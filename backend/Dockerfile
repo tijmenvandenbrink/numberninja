@@ -1,24 +1,24 @@
-FROM python:3.12-slim
-
-# Create non-root user
-RUN groupadd -g 10001 appuser && \
-    useradd -r -u 10001 -g appuser appuser
+FROM cgr.dev/chainguard/python:latest-dev AS build
 
 WORKDIR /app
 
-# Install dependencies as root
+# Install dependencies into an isolated target dir (keeps the runtime stage free of pip/gcc/etc.)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --target=/app/deps -r requirements.txt
 
-# Copy application code
-COPY app/ ./app/
+# Distroless runtime: no shell, no package manager, minimal OS surface.
+FROM cgr.dev/chainguard/python:latest
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /app
+WORKDIR /app
 
-# Switch to non-root user
-USER appuser
+COPY --from=build --chown=10001:10001 /app/deps /app/deps
+COPY --chown=10001:10001 app/ ./app/
+
+ENV PYTHONPATH=/app/deps
+
+USER 10001
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Base image ENTRYPOINT is ["/usr/bin/python"]; CMD supplies the module + args.
+CMD ["-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
