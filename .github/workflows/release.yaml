@@ -44,7 +44,7 @@ jobs:
       chart_version: ${{ steps.versions.outputs.chart_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
 
@@ -147,12 +147,12 @@ jobs:
         run: git pull origin main
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v5
         with:
-          version: '3.12.1'
+          version: '3.21.4'
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -168,7 +168,7 @@ jobs:
           helm push .helm-packages/numberninja-"$CHART_VERSION".tgz oci://ghcr.io/${{ github.repository_owner }}/charts
 
       - name: Create Chart Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           CHART_VERSION: ${{ steps.chart.outputs.version }}
           BACKEND_VERSION: ${{ needs.bump-version.outputs.backend_version }}
@@ -203,7 +203,7 @@ jobs:
     steps:
       - name: Create Backend Release
         if: inputs.component == 'backend' || inputs.component == 'both'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           BACKEND_VERSION: ${{ needs.bump-version.outputs.backend_version }}
         with:
@@ -223,7 +223,7 @@ jobs:
 
       - name: Create Frontend Release
         if: inputs.component == 'frontend' || inputs.component == 'both'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           FRONTEND_VERSION: ${{ needs.bump-version.outputs.frontend_version }}
         with:
