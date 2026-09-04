@@ -5,11 +5,11 @@ image:
   backend:
     repository: ghcr.io/tijmenvandenbrink/numberninja/backend
     pullPolicy: IfNotPresent
-    tag: "2.0.0"
+    tag: "2.0.1"
   frontend:
     repository: ghcr.io/tijmenvandenbrink/numberninja/frontend
     pullPolicy: IfNotPresent
-    tag: "2.0.0"
+    tag: "2.0.1"
 
 imagePullSecrets: []
 nameOverride: ""
